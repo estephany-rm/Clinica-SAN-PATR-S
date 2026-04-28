@@ -1,6 +1,5 @@
 -- Datos de prueba
 
--- database/seeds.sql
 USE clinica_san_patras_db;
 
 INSERT INTO medico (nombre, apellidos, telefono, especialidad) VALUES

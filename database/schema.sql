@@ -1,6 +1,5 @@
 -- Script de creación de tablas
 
--- database/schema.sql
 CREATE DATABASE IF NOT EXISTS clinica_san_patras_db
   CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
 
