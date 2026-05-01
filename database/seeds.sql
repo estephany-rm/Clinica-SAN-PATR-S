@@ -14,3 +14,9 @@ INSERT INTO paciente (nombre, apellidos, direccion, poblacion, provincia, codigo
 INSERT INTO ingreso (num_habitacion, cama, fecha_ingreso, paciente_codigo, medico_codigo) VALUES
   (101, 1, NOW(), 1, 1),
   (102, 2, NOW(), 2, 2);
+
+-- Usuario admin inicial (contraseña: Admin1234)
+-- Hash generado con bcrypt 10 rounds
+INSERT INTO usuarios (usuario, password, rol) VALUES
+  ('admin', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
+  ('medico1', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario');
