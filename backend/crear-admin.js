@@ -8,7 +8,7 @@ async function crearAdmin() {
     "INSERT INTO usuarios (usuario, password, rol) VALUES (?, ?, 'admin') ON DUPLICATE KEY UPDATE password = ?",
     ['admin', hash, hash]
   );
-  console.log('✅ Usuario admin creado. Usuario: admin | Contraseña: Admin1234');
+  console.log('Usuario admin creado. Usuario: admin | Contraseña: Admin1234');
   process.exit(0);
 }
 
