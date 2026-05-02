@@ -141,7 +141,7 @@ export default function Pacientes() {
       {/* Encabezado */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Pacientes 🧑‍⚕️</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Pacientes </h1>
           <p className="text-gray-500 text-sm mt-1">Gestión de pacientes de la clínica</p>
         </div>
         <button

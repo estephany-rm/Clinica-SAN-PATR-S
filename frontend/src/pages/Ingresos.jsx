@@ -129,7 +129,7 @@ export default function Ingresos() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Ingresos 🏥</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Ingresos </h1>
           <p className="text-gray-500 text-sm mt-1">Registro de ingresos hospitalarios</p>
         </div>
         <button onClick={abrirCrear} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
