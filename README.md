@@ -29,7 +29,7 @@ La comunicación entre el Frontend y el Backend se realiza mediante HTTP (JSON),
 
 ```bash
 git clone https://github.com/estephany-rm/Clinica-SAN-PATR-S.git
-cd clinica-san-patras
+cd Clinica-SAN-PATR-S
 ```
 
 ### 2. Configurar la base de datos
@@ -114,7 +114,7 @@ Esto crea el usuario: admin con contraseña: Admin1234
 ## Estructura del proyecto
 
 ```
-clinica-san-patras/
+Clinica-SAN-PATR-S/
 ├── frontend/          ← React + Vite
 ├── backend/           ← Node.js + Express
 ├── database/          ← Scripts SQL
