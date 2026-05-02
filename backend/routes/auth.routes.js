@@ -10,4 +10,7 @@ router.post('/registro', verifyToken, checkRole('admin'), registro); // solo adm
 router.get('/perfil',    verifyToken, perfil);
 router.get('/usuarios', verifyToken, checkRole('admin'), listarUsuarios);
 
+
+
+
 module.exports = router;
