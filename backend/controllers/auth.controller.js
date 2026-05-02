@@ -108,20 +108,6 @@ const listarUsuarios = async (req, res) => {
   }
 };
 
-// GET /api/auth/usuarios — solo admin lista todos los usuarios
-const listarUsuarios = async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT id, usuario, rol, imagen, creado_en FROM usuarios ORDER BY creado_en DESC'
-    );
-    return res.status(200).json({ success: true, data: rows, message: 'Usuarios obtenidos' });
-  } catch (error) {
-    console.error('Error al listar usuarios:', error);
-    return res.status(500).json({ success: false, data: null, message: 'Error del servidor' });
-  }
-};
-
-// Agregar al module.exports:
 module.exports = { login, registro, perfil, listarUsuarios };
 
 

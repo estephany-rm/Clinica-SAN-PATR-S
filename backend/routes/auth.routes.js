@@ -1,7 +1,7 @@
 // Rutas de autenticación
 const express = require('express');
 const router = express.Router();
-const { login, registro, perfil } = require('../controllers/auth.controller');
+const { login, registro, perfil, listarUsuarios } = require('../controllers/auth.controller');
 const verifyToken   = require('../middleware/verifyToken');
 const checkRole     = require('../middleware/checkRole');
 
