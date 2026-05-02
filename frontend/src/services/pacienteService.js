@@ -7,3 +7,4 @@ export const createPaciente = (datos)       => api.post('/pacientes', datos);
 export const updatePaciente = (id, datos)   => api.put(`/pacientes/${id}`, datos);
 export const deletePaciente = (id)          => api.delete(`/pacientes/${id}`);
 
+//cambioes cambios cambios 
