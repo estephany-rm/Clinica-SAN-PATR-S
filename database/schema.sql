@@ -12,7 +12,7 @@ CREATE TABLE paciente (
   direccion       VARCHAR(120),
   poblacion       VARCHAR(60),
   provincia       VARCHAR(60),
-  codigo_postal   CHAR(5),
+  codigo_postal   VARCHAR(10),
   telefono        VARCHAR(15),
   fecha_nacimiento DATE        NOT NULL
 );
