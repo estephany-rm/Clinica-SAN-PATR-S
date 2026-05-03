@@ -1,4 +1,3 @@
-
 // Módulo CRUD de Médicos
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
@@ -8,15 +7,19 @@ import { getMedicos, createMedico, updateMedico, deleteMedico } from '../service
 
 const FORM_INICIAL = { nombre: '', apellidos: '', telefono: '', especialidad: '' };
 
+// Todos los campos son obligatorios en médicos
+const CAMPOS_OBLIGATORIOS = ['nombre', 'apellidos', 'telefono', 'especialidad'];
+
 export default function Medicos() {
   const { isAdmin, isModerador } = useAuth();
-  const [medicos, setMedicos]         = useState([]);
-  const [cargando, setCargando]       = useState(true);
-  const [buscar, setBuscar]           = useState('');
+  const [medicos, setMedicos]           = useState([]);
+  const [cargando, setCargando]         = useState(true);
+  const [buscar, setBuscar]             = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [editando, setEditando]       = useState(null);
-  const [form, setForm]               = useState(FORM_INICIAL);
-  const [guardando, setGuardando]     = useState(false);
+  const [editando, setEditando]         = useState(null);
+  const [form, setForm]                 = useState(FORM_INICIAL);
+  const [guardando, setGuardando]       = useState(false);
+  const [errores, setErrores]           = useState({});
 
   const cargar = async (termino = '') => {
     setCargando(true);
@@ -34,22 +37,48 @@ export default function Medicos() {
 
   const handleBuscar = (e) => { setBuscar(e.target.value); cargar(e.target.value); };
 
-  const abrirCrear = () => { setEditando(null); setForm(FORM_INICIAL); setModalAbierto(true); };
+  const abrirCrear = () => {
+    setEditando(null);
+    setForm(FORM_INICIAL);
+    setErrores({});
+    setModalAbierto(true);
+  };
 
   const abrirEditar = (m) => {
     setEditando(m);
     setForm({ nombre: m.nombre, apellidos: m.apellidos, telefono: m.telefono || '', especialidad: m.especialidad });
+    setErrores({});
     setModalAbierto(true);
   };
 
-  const cerrarModal = () => { setModalAbierto(false); setEditando(null); setForm(FORM_INICIAL); };
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setEditando(null);
+    setForm(FORM_INICIAL);
+    setErrores({});
+  };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (value.trim()) setErrores(prev => ({ ...prev, [name]: false }));
+  };
+
+  const validar = () => {
+    const nuevosErrores = {};
+    CAMPOS_OBLIGATORIOS.forEach(campo => {
+      if (!form[campo] || !String(form[campo]).trim()) {
+        nuevosErrores[campo] = true;
+      }
+    });
+    setErrores(nuevosErrores);
+    return Object.keys(nuevosErrores).length === 0;
+  };
 
   const handleGuardar = async (e) => {
     e.preventDefault();
-    if (!form.nombre.trim() || !form.apellidos.trim() || !form.especialidad.trim()) {
-      Swal.fire('Campos requeridos', 'Nombre, apellidos y especialidad son obligatorios.', 'warning');
+    if (!validar()) {
+      Swal.fire('Campos incompletos', 'Por favor completa todos los campos obligatorios marcados en rojo.', 'warning');
       return;
     }
 
@@ -62,7 +91,6 @@ export default function Medicos() {
       confirmButtonText: 'Sí, guardar',
       cancelButtonText: 'Cancelar',
     });
-
     if (!confirm.isConfirmed) return;
 
     setGuardando(true);
@@ -105,11 +133,18 @@ export default function Medicos() {
     }
   };
 
+  const inputClass = (campo) =>
+    `w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+      errores[campo]
+        ? 'border-red-500 focus:ring-red-400 bg-red-50'
+        : 'border-gray-300 focus:ring-blue-500'
+    }`;
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Médicos </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Médicos 👨‍⚕️</h1>
           <p className="text-gray-500 text-sm mt-1">Personal médico de la clínica</p>
         </div>
         {isModerador() && (
@@ -177,36 +212,45 @@ export default function Medicos() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
                 {editando ? 'Editar Médico' : 'Nuevo Médico'}
               </h2>
+              <p className="text-xs text-gray-400 mb-6">Todos los campos son obligatorios *</p>
               <form onSubmit={handleGuardar} className="space-y-4">
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre * {errores.nombre && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="nombre" value={form.nombre} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Nombre" />
+                      className={inputClass('nombre')} placeholder="Nombre" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Apellidos * {errores.apellidos && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="apellidos" value={form.apellidos} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Apellidos" />
+                      className={inputClass('apellidos')} placeholder="Apellidos" />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Especialidad *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Especialidad * {errores.especialidad && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <input name="especialidad" value={form.especialidad} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ej: Cardiología, Pediatría..." />
+                    className={inputClass('especialidad')} placeholder="Ej: Cardiología, Pediatría..." />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono * {errores.telefono && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <input name="telefono" value={form.telefono} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="3001234567" />
+                    className={inputClass('telefono')} placeholder="3001234567" />
                 </div>
+
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={guardando}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50">
@@ -217,6 +261,7 @@ export default function Medicos() {
                     Cancelar
                   </button>
                 </div>
+
               </form>
             </div>
           </div>
@@ -225,4 +270,3 @@ export default function Medicos() {
     </Layout>
   );
 }
-

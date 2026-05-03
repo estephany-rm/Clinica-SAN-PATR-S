@@ -1,4 +1,3 @@
-
 // Módulo CRUD de Pacientes
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
@@ -13,15 +12,20 @@ const FORM_INICIAL = {
   provincia: '', codigo_postal: '', telefono: '', fecha_nacimiento: ''
 };
 
+// Campos que se deben validar como obligatorios
+const CAMPOS_OBLIGATORIOS = ['nombre', 'apellidos', 'direccion', 'poblacion', 'provincia', 'codigo_postal', 'telefono', 'fecha_nacimiento'];
+
 export default function Pacientes() {
   const { isAdmin } = useAuth();
-  const [pacientes, setPacientes]     = useState([]);
-  const [cargando, setCargando]       = useState(true);
-  const [buscar, setBuscar]           = useState('');
+  const [pacientes, setPacientes]       = useState([]);
+  const [cargando, setCargando]         = useState(true);
+  const [buscar, setBuscar]             = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [editando, setEditando]       = useState(null); // null = crear, objeto = editar
-  const [form, setForm]               = useState(FORM_INICIAL);
-  const [guardando, setGuardando]     = useState(false);
+  const [editando, setEditando]         = useState(null);
+  const [form, setForm]                 = useState(FORM_INICIAL);
+  const [guardando, setGuardando]       = useState(false);
+  // errores: objeto con los nombres de campos que están vacíos
+  const [errores, setErrores]           = useState({});
 
   const cargar = async (termino = '') => {
     setCargando(true);
@@ -37,14 +41,12 @@ export default function Pacientes() {
 
   useEffect(() => { cargar(); }, []);
 
-  const handleBuscar = (e) => {
-    setBuscar(e.target.value);
-    cargar(e.target.value);
-  };
+  const handleBuscar = (e) => { setBuscar(e.target.value); cargar(e.target.value); };
 
   const abrirCrear = () => {
     setEditando(null);
     setForm(FORM_INICIAL);
+    setErrores({});
     setModalAbierto(true);
   };
 
@@ -60,6 +62,7 @@ export default function Pacientes() {
       telefono:         paciente.telefono || '',
       fecha_nacimiento: paciente.fecha_nacimiento?.split('T')[0] || '',
     });
+    setErrores({});
     setModalAbierto(true);
   };
 
@@ -67,15 +70,34 @@ export default function Pacientes() {
     setModalAbierto(false);
     setEditando(null);
     setForm(FORM_INICIAL);
+    setErrores({});
   };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  // Al cambiar un campo, quitar el error de ese campo si ya tiene valor
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (value.trim()) {
+      setErrores(prev => ({ ...prev, [name]: false }));
+    }
+  };
+
+  // Valida todos los campos obligatorios y devuelve true si está todo bien
+  const validar = () => {
+    const nuevosErrores = {};
+    CAMPOS_OBLIGATORIOS.forEach(campo => {
+      if (!form[campo] || !String(form[campo]).trim()) {
+        nuevosErrores[campo] = true;
+      }
+    });
+    setErrores(nuevosErrores);
+    return Object.keys(nuevosErrores).length === 0;
+  };
 
   const handleGuardar = async (e) => {
     e.preventDefault();
-
-    if (!form.nombre.trim() || !form.apellidos.trim() || !form.fecha_nacimiento) {
-      Swal.fire('Campos requeridos', 'Nombre, apellidos y fecha de nacimiento son obligatorios.', 'warning');
+    if (!validar()) {
+      Swal.fire('Campos incompletos', 'Por favor completa todos los campos obligatorios marcados en rojo.', 'warning');
       return;
     }
 
@@ -90,7 +112,6 @@ export default function Pacientes() {
       confirmButtonText: `Sí, ${accion}`,
       cancelButtonText: 'Cancelar',
     });
-
     if (!confirm.isConfirmed) return;
 
     setGuardando(true);
@@ -105,8 +126,7 @@ export default function Pacientes() {
       cerrarModal();
       cargar(buscar);
     } catch (error) {
-      const msg = error.response?.data?.message || 'Error al guardar el paciente';
-      Swal.fire('Error', msg, 'error');
+      Swal.fire('Error', error.response?.data?.message || 'Error al guardar el paciente', 'error');
     } finally {
       setGuardando(false);
     }
@@ -123,7 +143,6 @@ export default function Pacientes() {
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
     });
-
     if (!result.isConfirmed) return;
 
     try {
@@ -131,39 +150,36 @@ export default function Pacientes() {
       Swal.fire('Eliminado', 'El paciente fue eliminado correctamente.', 'success');
       cargar(buscar);
     } catch (error) {
-      const msg = error.response?.data?.message || 'No se pudo eliminar el paciente';
-      Swal.fire('Error', msg, 'error');
+      Swal.fire('Error', error.response?.data?.message || 'No se pudo eliminar el paciente', 'error');
     }
   };
 
+  // Clases del input: rojo si tiene error, normal si no
+  const inputClass = (campo) =>
+    `w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+      errores[campo]
+        ? 'border-red-500 focus:ring-red-400 bg-red-50'
+        : 'border-gray-300 focus:ring-blue-500'
+    }`;
+
   return (
     <Layout>
-      {/* Encabezado */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Pacientes </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Pacientes 🧑‍⚕️</h1>
           <p className="text-gray-500 text-sm mt-1">Gestión de pacientes de la clínica</p>
         </div>
-        <button
-          onClick={abrirCrear}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
-        >
+        <button onClick={abrirCrear} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
           + Nuevo Paciente
         </button>
       </div>
 
-      {/* Buscador */}
       <div className="mb-4">
-        <input
-          type="text"
-          value={buscar}
-          onChange={handleBuscar}
+        <input type="text" value={buscar} onChange={handleBuscar}
           placeholder="Buscar por nombre, apellidos o teléfono..."
-          className="w-full md:w-96 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          className="w-full md:w-96 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
 
-      {/* Tabla */}
       <div className="bg-white rounded-xl shadow overflow-x-auto">
         {cargando ? (
           <div className="p-8 text-center text-gray-500">Cargando pacientes...</div>
@@ -192,17 +208,13 @@ export default function Pacientes() {
                   <td className="px-4 py-3">{p.poblacion || '—'}</td>
                   <td className="px-4 py-3">{p.provincia || '—'}</td>
                   <td className="px-4 py-3 flex gap-2">
-                    <button
-                      onClick={() => abrirEditar(p)}
-                      className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium"
-                    >
+                    <button onClick={() => abrirEditar(p)}
+                      className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
                       Editar
                     </button>
                     {isAdmin() && (
-                      <button
-                        onClick={() => handleEliminar(p)}
-                        className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium"
-                      >
+                      <button onClick={() => handleEliminar(p)}
+                        className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
                         Eliminar
                       </button>
                     )}
@@ -214,68 +226,83 @@ export default function Pacientes() {
         )}
       </div>
 
-      {/* Modal Crear/Editar */}
       {modalAbierto && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
                 {editando ? 'Editar Paciente' : 'Nuevo Paciente'}
               </h2>
+              <p className="text-xs text-gray-400 mb-6">Todos los campos son obligatorios *</p>
               <form onSubmit={handleGuardar} className="space-y-4">
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre * {errores.nombre && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="nombre" value={form.nombre} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Nombre" />
+                      className={inputClass('nombre')} placeholder="Nombre" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Apellidos * {errores.apellidos && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="apellidos" value={form.apellidos} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Apellidos" />
+                      className={inputClass('apellidos')} placeholder="Apellidos" />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dirección * {errores.direccion && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <input name="direccion" value={form.direccion} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Dirección" />
+                    className={inputClass('direccion')} placeholder="Calle 123 # 45-67" />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Población</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Población * {errores.poblacion && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="poblacion" value={form.poblacion} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Población" />
+                      className={inputClass('poblacion')} placeholder="Pereira" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Provincia</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Provincia * {errores.provincia && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="provincia" value={form.provincia} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Provincia" />
+                      className={inputClass('provincia')} placeholder="Risaralda" />
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Código Postal</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Código Postal * {errores.codigo_postal && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="codigo_postal" value={form.codigo_postal} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="00000" maxLength={5} />
+                      className={inputClass('codigo_postal')} placeholder="660001" maxLength={10} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Teléfono * {errores.telefono && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="telefono" value={form.telefono} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="3001234567" />
+                      className={inputClass('telefono')} placeholder="3001234567" />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha de Nacimiento * {errores.fecha_nacimiento && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <input name="fecha_nacimiento" type="date" value={form.fecha_nacimiento} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className={inputClass('fecha_nacimiento')} />
                 </div>
+
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={guardando}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50">
@@ -286,6 +313,7 @@ export default function Pacientes() {
                     Cancelar
                   </button>
                 </div>
+
               </form>
             </div>
           </div>

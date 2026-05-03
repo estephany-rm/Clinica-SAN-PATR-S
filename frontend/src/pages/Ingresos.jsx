@@ -1,4 +1,3 @@
-
 // Módulo CRUD de Ingresos
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
@@ -10,6 +9,9 @@ import { getMedicos }   from '../services/medicoService';
 
 const FORM_INICIAL = { num_habitacion: '', cama: '', fecha_ingreso: '', paciente_codigo: '', medico_codigo: '' };
 
+// Todos los campos son obligatorios en ingresos
+const CAMPOS_OBLIGATORIOS = ['num_habitacion', 'cama', 'fecha_ingreso', 'paciente_codigo', 'medico_codigo'];
+
 export default function Ingresos() {
   const { isAdmin } = useAuth();
   const [ingresos, setIngresos]         = useState([]);
@@ -20,6 +22,7 @@ export default function Ingresos() {
   const [editando, setEditando]         = useState(null);
   const [form, setForm]                 = useState(FORM_INICIAL);
   const [guardando, setGuardando]       = useState(false);
+  const [errores, setErrores]           = useState({});
 
   const cargar = async () => {
     setCargando(true);
@@ -42,30 +45,51 @@ export default function Ingresos() {
   const abrirCrear = () => {
     setEditando(null);
     setForm({ ...FORM_INICIAL, fecha_ingreso: new Date().toISOString().slice(0, 16) });
+    setErrores({});
     setModalAbierto(true);
   };
 
   const abrirEditar = (i) => {
     setEditando(i);
     setForm({
-      num_habitacion: i.num_habitacion,
-      cama:           i.cama,
-      fecha_ingreso:  i.fecha_ingreso?.slice(0, 16) || '',
+      num_habitacion:  i.num_habitacion,
+      cama:            i.cama,
+      fecha_ingreso:   i.fecha_ingreso?.slice(0, 16) || '',
       paciente_codigo: i.paciente_codigo,
-      medico_codigo:  i.medico_codigo,
+      medico_codigo:   i.medico_codigo,
     });
+    setErrores({});
     setModalAbierto(true);
   };
 
-  const cerrarModal = () => { setModalAbierto(false); setEditando(null); setForm(FORM_INICIAL); };
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setEditando(null);
+    setForm(FORM_INICIAL);
+    setErrores({});
+  };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (value) setErrores(prev => ({ ...prev, [name]: false }));
+  };
+
+  const validar = () => {
+    const nuevosErrores = {};
+    CAMPOS_OBLIGATORIOS.forEach(campo => {
+      if (!form[campo] || !String(form[campo]).trim()) {
+        nuevosErrores[campo] = true;
+      }
+    });
+    setErrores(nuevosErrores);
+    return Object.keys(nuevosErrores).length === 0;
+  };
 
   const handleGuardar = async (e) => {
     e.preventDefault();
-    const { num_habitacion, cama, paciente_codigo, medico_codigo } = form;
-    if (!num_habitacion || !cama || !paciente_codigo || !medico_codigo) {
-      Swal.fire('Campos requeridos', 'Habitación, cama, paciente y médico son obligatorios.', 'warning');
+    if (!validar()) {
+      Swal.fire('Campos incompletos', 'Por favor completa todos los campos obligatorios marcados en rojo.', 'warning');
       return;
     }
 
@@ -125,11 +149,19 @@ export default function Ingresos() {
     return new Date(fecha).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
   };
 
+  // Rojo si hay error, normal si no — funciona también para <select>
+  const inputClass = (campo) =>
+    `w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+      errores[campo]
+        ? 'border-red-500 focus:ring-red-400 bg-red-50'
+        : 'border-gray-300 focus:ring-blue-500'
+    }`;
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Ingresos </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Ingresos 🏥</h1>
           <p className="text-gray-500 text-sm mt-1">Registro de ingresos hospitalarios</p>
         </div>
         <button onClick={abrirCrear} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
@@ -191,49 +223,63 @@ export default function Ingresos() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
                 {editando ? 'Editar Ingreso' : 'Nuevo Ingreso'}
               </h2>
+              <p className="text-xs text-gray-400 mb-6">Todos los campos son obligatorios *</p>
               <form onSubmit={handleGuardar} className="space-y-4">
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Habitación *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Habitación * {errores.num_habitacion && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="num_habitacion" type="number" value={form.num_habitacion} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="101" min={1} />
+                      className={inputClass('num_habitacion')} placeholder="101" min={1} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cama *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cama * {errores.cama && <span className="text-red-500 text-xs">Requerido</span>}
+                    </label>
                     <input name="cama" type="number" value={form.cama} onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="1" min={1} />
+                      className={inputClass('cama')} placeholder="1" min={1} />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora de Ingreso</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha y Hora de Ingreso * {errores.fecha_ingreso && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <input name="fecha_ingreso" type="datetime-local" value={form.fecha_ingreso} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className={inputClass('fecha_ingreso')} />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Paciente *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Paciente * {errores.paciente_codigo && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <select name="paciente_codigo" value={form.paciente_codigo} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className={inputClass('paciente_codigo')}>
                     <option value="">Seleccionar paciente...</option>
                     {pacientes.map(p => (
                       <option key={p.codigo} value={p.codigo}>{p.nombre} {p.apellidos}</option>
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Médico *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Médico * {errores.medico_codigo && <span className="text-red-500 text-xs">Requerido</span>}
+                  </label>
                   <select name="medico_codigo" value={form.medico_codigo} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className={inputClass('medico_codigo')}>
                     <option value="">Seleccionar médico...</option>
                     {medicos.map(m => (
                       <option key={m.codigo} value={m.codigo}>Dr. {m.nombre} {m.apellidos} — {m.especialidad}</option>
                     ))}
                   </select>
                 </div>
+
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={guardando}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50">
@@ -244,6 +290,7 @@ export default function Ingresos() {
                     Cancelar
                   </button>
                 </div>
+
               </form>
             </div>
           </div>
