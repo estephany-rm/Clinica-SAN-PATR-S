@@ -99,7 +99,8 @@ SOURCE /tu-ruta/Clinica-SAN-PATR-S/database/schema.sql;
 6. Cargar datos (seeds)
 ```bash
 SOURCE /tu-ruta/Clinica-SAN-PATR-S/database/seeds.sql;
-6. Verificar
+```
+7. Verificar
 ```bash
 SHOW TABLES;
 ```
