@@ -1,4 +1,3 @@
-
 // Dashboard principal
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
@@ -12,7 +11,7 @@ const CardEstadistica = ({ titulo, valor, icono, color }) => (
       <div>
         <p className="text-sm text-gray-500 font-medium">{titulo}</p>
         <p className="text-3xl font-bold text-gray-800 mt-1">
-          {valor !== null ? valor : '—'}
+          {valor ?? '...'}
         </p>
       </div>
       <span className="text-4xl">{icono}</span>
@@ -22,27 +21,34 @@ const CardEstadistica = ({ titulo, valor, icono, color }) => (
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({ total_pacientes: null, total_medicos: null, total_ingresos: null });
   const [cargando, setCargando] = useState(true);
 
-  useEffect(() => {
-    const cargarEstadisticas = async () => {
-      try {
-        const response = await estadisticasService();
-        if (response.success) setStats(response.data);
-      } catch (error) {
-        console.error('Error al cargar estadísticas:', error);
-      } finally {
-        setCargando(false);
+  const cargarEstadisticas = async () => {
+    try {
+      const response = await estadisticasService();
+      if (response.success) {
+        setStats({
+          total_pacientes: Number(response.data.total_pacientes),
+          total_medicos:   Number(response.data.total_medicos),
+          total_ingresos:  Number(response.data.total_ingresos),
+        });
       }
-    };
+    } catch (error) {
+      console.error('Error al cargar estadísticas:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
     cargarEstadisticas();
   }, []);
 
   const accesosRapidos = [
-    { to: '/pacientes', label: 'Gestionar Pacientes', icono: '🧑‍⚕️', desc: 'Ver, crear y editar pacientes' },
-    { to: '/medicos',   label: 'Gestionar Médicos',   icono: '👨‍⚕️', desc: 'Administrar el personal médico', roles: ['admin', 'moderador'] },
-    { to: '/ingresos',  label: 'Gestionar Ingresos',  icono: '🏥', desc: 'Registrar ingresos hospitalarios' },
+    { to: '/pacientes', label: 'Gestionar Pacientes', icono: '', desc: 'Ver, crear y editar pacientes' },
+    { to: '/medicos',   label: 'Gestionar Médicos',   icono: '', desc: 'Administrar el personal médico', roles: ['admin', 'moderador'] },
+    { to: '/ingresos',  label: 'Gestionar Ingresos',  icono: '', desc: 'Registrar ingresos hospitalarios' },
   ].filter(a => !a.roles || a.roles.includes(user?.rol));
 
   return (
@@ -50,7 +56,7 @@ export default function Dashboard() {
       {/* Encabezado */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">
-          Bienvenido, {user?.usuario} 👋
+          Bienvenido, {user?.usuario} 
         </h1>
         <p className="text-gray-500 mt-1">
           Rol: <span className="font-medium capitalize text-blue-600">{user?.rol}</span> · 
@@ -62,20 +68,20 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <CardEstadistica
           titulo="Total Pacientes"
-          valor={cargando ? '...' : stats?.total_pacientes}
-          icono="🧑‍⚕️"
+          valor={cargando ? '...' : stats.total_pacientes}
+          icono=""
           color="border-blue-500"
         />
         <CardEstadistica
           titulo="Total Médicos"
-          valor={cargando ? '...' : stats?.total_medicos}
-          icono="👨‍⚕️"
+          valor={cargando ? '...' : stats.total_medicos}
+          icono=""
           color="border-green-500"
         />
         <CardEstadistica
           titulo="Total Ingresos"
-          valor={cargando ? '...' : stats?.total_ingresos}
-          icono="🏥"
+          valor={cargando ? '...' : stats.total_ingresos}
+          icono=""
           color="border-purple-500"
         />
       </div>
