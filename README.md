@@ -35,6 +35,7 @@ cd Clinica-SAN-PATR-S
 ### 2. Configurar la base de datos
 
 Abre MySQL Workbench o la terminal MySQL y ejecuta:
+
 LINUX / MAC 
 1. Entrar a MySQL desde la terminal
 ```bash
