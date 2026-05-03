@@ -106,10 +106,10 @@ SHOW TABLES;
 
 
 
-```bash
-mysql -u root -p < database/schema.sql
-mysql -u root -p < database/seeds.sql
-```
+
+<!--mysql -u root -p < database/schema.sql-->
+<!--mysql -u root -p < database/seeds.sql-->
+
 
 ### 3. Configurar el backend
 
