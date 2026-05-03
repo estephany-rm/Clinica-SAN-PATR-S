@@ -12,7 +12,7 @@ CREATE TABLE paciente (
   direccion       VARCHAR(120),
   poblacion       VARCHAR(60),
   provincia       VARCHAR(60),
-  codigo_postal   CHAR(5),
+  codigo_postal   VARCHAR(10),
   telefono        VARCHAR(15),
   fecha_nacimiento DATE        NOT NULL
 );
@@ -46,3 +46,5 @@ CREATE TABLE usuarios (
   rol        ENUM('admin','usuario','moderador') NOT NULL DEFAULT 'usuario',
   creado_en  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
+
+
