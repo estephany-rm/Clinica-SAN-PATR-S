@@ -18,7 +18,8 @@ La comunicación entre el Frontend y el Backend se realiza mediante HTTP (JSON),
 ## Requisitos previos
 
 - Node.js v18 o superior: https://nodejs.org
-- MySQL 8: https://dev.mysql.com/downloads/mysql/
+- MySQL 8: https://dev.mysql.com/downloads/mysql/ o
+- XAMPP https://www.apachefriends.org/es/index.html
 - Git: https://git-scm.com
 
 ---
@@ -33,91 +34,17 @@ cd Clinica-SAN-PATR-S
 ```
 
 ### 2. Configurar la base de datos
-
-Abre MySQL Workbench o la terminal MySQL y ejecuta:
-
-LINUX / MAC 
-1. Entrar a MySQL desde la terminal
-```bash
-/usr/local/mysql/bin/mysql -u root -p
 ```
-Ingresas tu contraseña
-
-3. Crear la base de datos
-```bash
-CREATE DATABASE clinica_san_patras_db;
+mysql -u root -p < database/schema.sql
+mysql -u root -p < database/seeds.sql
 ```
-3. Usar la base
-```bash
-USE clinica_san_patras_db;
-```
-5. Cargar schema 
-Usa ruta completa:
-Cómo saber la ruta exacta 
-En VS Code:
-Haz clic derecho sobre schema.sql
-Dale a "Copy Path" (Copiar ruta)
-Pégala en MySQL después de SOURCE
-```bash
-SOURCE /tu-ruta/Clinica-SAN-PATR-S/database/schema.sql;
-```
-6. Cargar datos (seeds)
-```bash
-SOURCE /tu-ruta/Clinica-SAN-PATR-S/database/seeds.sql;
-```
-7. Verificar
-```bash
-SHOW TABLES;
-```
-WINDOWS
-1. Entrar a MySQL
-(Si no reconoce mysql, usa la ruta completa)
-```bash
-mysql -u root -p  
-```
-O
-```bash
-"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p
-```
-2. Crear base de datos
-```bash
-CREATE DATABASE clinica_san_patras_db;
-```
-3. Usarla
-```bash
-USE clinica_san_patras_db;
-```
-5. Cargar schema 
-Usa ruta completa:
-Cómo saber la ruta exacta 
-En VS Code:
-Haz clic derecho sobre schema.sql
-Dale a "Copy Path" (Copiar ruta)
-Pégala en MySQL después de SOURCE
-```bash
-SOURCE /tu-ruta/Clinica-SAN-PATR-S/database/schema.sql;
-```
-6. Cargar datos (seeds)
-```bash
-SOURCE /tu-ruta/Clinica-SAN-PATR-S/database/seeds.sql;
-```
-7. Verificar
-```bash
-SHOW TABLES;
-```
-
-
-
-
-<!--mysql -u root -p < database/schema.sql-->
-<!--mysql -u root -p < database/seeds.sql-->
-
 
 ### 3. Configurar el backend
 
 ```bash
 cd backend
-cp .env.example .env
+cp .env.example .env // en linux o mac
+// copy .env.example .env // en windows
 ```
 
 Edita `backend/.env` con tus credenciales:
