@@ -21,17 +21,23 @@ const CardEstadistica = ({ titulo, valor, icono, color }) => (
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ total_pacientes: null, total_medicos: null, total_ingresos: null });
+  const [stats, setStats] = useState({
+    total_pacientes: null,
+    total_medicos:   null,
+    total_ingresos:  null,
+  });
   const [cargando, setCargando] = useState(true);
 
   const cargarEstadisticas = async () => {
     try {
-      const response = await estadisticasService();
-      if (response.success) {
+      const res = await estadisticasService();
+      // Axios envuelve la respuesta del backend en res.data
+      // res.data = { success: true, data: { total_pacientes, ... } }
+      if (res.data?.success) {
         setStats({
-          total_pacientes: Number(response.data.total_pacientes),
-          total_medicos:   Number(response.data.total_medicos),
-          total_ingresos:  Number(response.data.total_ingresos),
+          total_pacientes: Number(res.data.data.total_pacientes),
+          total_medicos:   Number(res.data.data.total_medicos),
+          total_ingresos:  Number(res.data.data.total_ingresos),
         });
       }
     } catch (error) {
@@ -46,9 +52,9 @@ export default function Dashboard() {
   }, []);
 
   const accesosRapidos = [
-    { to: '/pacientes', label: 'Gestionar Pacientes', icono: '', desc: 'Ver, crear y editar pacientes' },
-    { to: '/medicos',   label: 'Gestionar Médicos',   icono: '', desc: 'Administrar el personal médico', roles: ['admin', 'moderador'] },
-    { to: '/ingresos',  label: 'Gestionar Ingresos',  icono: '', desc: 'Registrar ingresos hospitalarios' },
+    { to: '/pacientes', label: 'Gestionar Pacientes', icono: '🧑‍⚕️', desc: 'Ver, crear y editar pacientes' },
+    { to: '/medicos',   label: 'Gestionar Médicos',   icono: '👨‍⚕️', desc: 'Administrar el personal médico', roles: ['admin', 'moderador'] },
+    { to: '/ingresos',  label: 'Gestionar Ingresos',  icono: '🏥',   desc: 'Registrar ingresos hospitalarios' },
   ].filter(a => !a.roles || a.roles.includes(user?.rol));
 
   return (
@@ -56,10 +62,10 @@ export default function Dashboard() {
       {/* Encabezado */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">
-          Bienvenido, {user?.usuario} 
+          Bienvenido, {user?.usuario} 👋
         </h1>
         <p className="text-gray-500 mt-1">
-          Rol: <span className="font-medium capitalize text-blue-600">{user?.rol}</span> · 
+          Rol: <span className="font-medium capitalize text-blue-600">{user?.rol}</span> ·
           Clínica San Patrás — Sistema de Gestión Hospitalaria
         </p>
       </div>
@@ -69,19 +75,19 @@ export default function Dashboard() {
         <CardEstadistica
           titulo="Total Pacientes"
           valor={cargando ? '...' : stats.total_pacientes}
-          icono=""
+          icono="🧑‍⚕️"
           color="border-blue-500"
         />
         <CardEstadistica
           titulo="Total Médicos"
           valor={cargando ? '...' : stats.total_medicos}
-          icono=""
+          icono="👨‍⚕️"
           color="border-green-500"
         />
         <CardEstadistica
           titulo="Total Ingresos"
           valor={cargando ? '...' : stats.total_ingresos}
-          icono=""
+          icono="🏥"
           color="border-purple-500"
         />
       </div>
