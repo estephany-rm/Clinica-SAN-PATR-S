@@ -8,9 +8,8 @@ import { getPacientes } from '../services/pacienteService';
 import { getMedicos }   from '../services/medicoService';
 
 const FORM_INICIAL = { num_habitacion: '', cama: '', fecha_ingreso: '', paciente_codigo: '', medico_codigo: '' };
-
-// Todos los campos son obligatorios en ingresos
 const CAMPOS_OBLIGATORIOS = ['num_habitacion', 'cama', 'fecha_ingreso', 'paciente_codigo', 'medico_codigo'];
+const POR_PAGINA = 5;
 
 export default function Ingresos() {
   const { isAdmin } = useAuth();
@@ -18,6 +17,7 @@ export default function Ingresos() {
   const [pacientes, setPacientes]       = useState([]);
   const [medicos, setMedicos]           = useState([]);
   const [cargando, setCargando]         = useState(true);
+  const [pagina, setPagina]             = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando]         = useState(null);
   const [form, setForm]                 = useState(FORM_INICIAL);
@@ -30,7 +30,7 @@ export default function Ingresos() {
       const [resIngresos, resPacientes, resMedicos] = await Promise.all([
         getIngresos(), getPacientes(), getMedicos()
       ]);
-      if (resIngresos.data.success)  setIngresos(resIngresos.data.data);
+      if (resIngresos.data.success)  { setIngresos(resIngresos.data.data); setPagina(1); }
       if (resPacientes.data.success) setPacientes(resPacientes.data.data);
       if (resMedicos.data.success)   setMedicos(resMedicos.data.data);
     } catch {
@@ -41,6 +41,10 @@ export default function Ingresos() {
   };
 
   useEffect(() => { cargar(); }, []);
+
+  // Paginación
+  const totalPaginas = Math.ceil(ingresos.length / POR_PAGINA);
+  const ingresosPagina = ingresos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   const abrirCrear = () => {
     setEditando(null);
@@ -149,7 +153,6 @@ export default function Ingresos() {
     return new Date(fecha).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
   };
 
-  // Rojo si hay error, normal si no — funciona también para <select>
   const inputClass = (campo) =>
     `w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
       errores[campo]
@@ -175,47 +178,80 @@ export default function Ingresos() {
         ) : ingresos.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No hay ingresos registrados.</div>
         ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
-              <tr>
-                <th className="px-4 py-3">Código</th>
-                <th className="px-4 py-3">Habitación</th>
-                <th className="px-4 py-3">Cama</th>
-                <th className="px-4 py-3">Fecha Ingreso</th>
-                <th className="px-4 py-3">Paciente</th>
-                <th className="px-4 py-3">Médico</th>
-                <th className="px-4 py-3">Especialidad</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ingresos.map((i) => (
-                <tr key={i.codigo} className="border-t border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-700">#{i.codigo}</td>
-                  <td className="px-4 py-3">{i.num_habitacion}</td>
-                  <td className="px-4 py-3">{i.cama}</td>
-                  <td className="px-4 py-3">{formatFecha(i.fecha_ingreso)}</td>
-                  <td className="px-4 py-3">{i.nombre_paciente}</td>
-                  <td className="px-4 py-3">{i.nombre_medico}</td>
-                  <td className="px-4 py-3">
-                    <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{i.especialidad}</span>
-                  </td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button onClick={() => abrirEditar(i)}
-                      className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
-                      Editar
-                    </button>
-                    {isAdmin() && (
-                      <button onClick={() => handleEliminar(i)}
-                        className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
-                        Eliminar
-                      </button>
-                    )}
-                  </td>
+          <>
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-3">Código</th>
+                  <th className="px-4 py-3">Habitación</th>
+                  <th className="px-4 py-3">Cama</th>
+                  <th className="px-4 py-3">Fecha Ingreso</th>
+                  <th className="px-4 py-3">Paciente</th>
+                  <th className="px-4 py-3">Médico</th>
+                  <th className="px-4 py-3">Especialidad</th>
+                  <th className="px-4 py-3">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {ingresosPagina.map((i) => (
+                  <tr key={i.codigo} className="border-t border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-700">#{i.codigo}</td>
+                    <td className="px-4 py-3">{i.num_habitacion}</td>
+                    <td className="px-4 py-3">{i.cama}</td>
+                    <td className="px-4 py-3">{formatFecha(i.fecha_ingreso)}</td>
+                    <td className="px-4 py-3">{i.nombre_paciente}</td>
+                    <td className="px-4 py-3">{i.nombre_medico}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{i.especialidad}</span>
+                    </td>
+                    <td className="px-4 py-3 flex gap-2">
+                      <button onClick={() => abrirEditar(i)}
+                        className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
+                        Editar
+                      </button>
+                      {isAdmin() && (
+                        <button onClick={() => handleEliminar(i)}
+                          className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
+                          Eliminar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Paginación */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+              <span>
+                Mostrando {Math.min((pagina - 1) * POR_PAGINA + 1, ingresos.length)}–{Math.min(pagina * POR_PAGINA, ingresos.length)} de {ingresos.length} ingresos
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPagina(p => Math.max(p - 1, 1))}
+                  disabled={pagina === 1}
+                  className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                  ← Anterior
+                </button>
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                  <button key={n} onClick={() => setPagina(n)}
+                    className={`px-3 py-1 rounded border transition ${
+                      n === pagina
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}>
+                    {n}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPagina(p => Math.min(p + 1, totalPaginas))}
+                  disabled={pagina === totalPaginas}
+                  className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                  Siguiente →
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

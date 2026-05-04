@@ -12,26 +12,30 @@ const FORM_INICIAL = {
   provincia: '', codigo_postal: '', telefono: '', fecha_nacimiento: ''
 };
 
-// Campos que se deben validar como obligatorios
 const CAMPOS_OBLIGATORIOS = ['nombre', 'apellidos', 'direccion', 'poblacion', 'provincia', 'codigo_postal', 'telefono', 'fecha_nacimiento'];
+
+const POR_PAGINA = 5;
 
 export default function Pacientes() {
   const { isAdmin } = useAuth();
   const [pacientes, setPacientes]       = useState([]);
   const [cargando, setCargando]         = useState(true);
   const [buscar, setBuscar]             = useState('');
+  const [pagina, setPagina]             = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando]         = useState(null);
   const [form, setForm]                 = useState(FORM_INICIAL);
   const [guardando, setGuardando]       = useState(false);
-  // errores: objeto con los nombres de campos que están vacíos
   const [errores, setErrores]           = useState({});
 
   const cargar = async (termino = '') => {
     setCargando(true);
     try {
       const res = await getPacientes(termino);
-      if (res.data.success) setPacientes(res.data.data);
+      if (res.data.success) {
+        setPacientes(res.data.data);
+        setPagina(1); // volver a la primera página al buscar
+      }
     } catch {
       Swal.fire('Error', 'No se pudieron cargar los pacientes', 'error');
     } finally {
@@ -40,6 +44,10 @@ export default function Pacientes() {
   };
 
   useEffect(() => { cargar(); }, []);
+
+  // Paginación: calcular slice de la página actual
+  const totalPaginas = Math.ceil(pacientes.length / POR_PAGINA);
+  const pacientesPagina = pacientes.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   const handleBuscar = (e) => { setBuscar(e.target.value); cargar(e.target.value); };
 
@@ -73,7 +81,6 @@ export default function Pacientes() {
     setErrores({});
   };
 
-  // Al cambiar un campo, quitar el error de ese campo si ya tiene valor
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -82,7 +89,6 @@ export default function Pacientes() {
     }
   };
 
-  // Valida todos los campos obligatorios y devuelve true si está todo bien
   const validar = () => {
     const nuevosErrores = {};
     CAMPOS_OBLIGATORIOS.forEach(campo => {
@@ -154,7 +160,6 @@ export default function Pacientes() {
     }
   };
 
-  // Clases del input: rojo si tiene error, normal si no
   const inputClass = (campo) =>
     `w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
       errores[campo]
@@ -186,43 +191,76 @@ export default function Pacientes() {
         ) : pacientes.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No se encontraron pacientes.</div>
         ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
-              <tr>
-                <th className="px-4 py-3">Código</th>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Apellidos</th>
-                <th className="px-4 py-3">Teléfono</th>
-                <th className="px-4 py-3">Población</th>
-                <th className="px-4 py-3">Provincia</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pacientes.map((p) => (
-                <tr key={p.codigo} className="border-t border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-700">#{p.codigo}</td>
-                  <td className="px-4 py-3">{p.nombre}</td>
-                  <td className="px-4 py-3">{p.apellidos}</td>
-                  <td className="px-4 py-3">{p.telefono || '—'}</td>
-                  <td className="px-4 py-3">{p.poblacion || '—'}</td>
-                  <td className="px-4 py-3">{p.provincia || '—'}</td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button onClick={() => abrirEditar(p)}
-                      className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
-                      Editar
-                    </button>
-                    {isAdmin() && (
-                      <button onClick={() => handleEliminar(p)}
-                        className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
-                        Eliminar
-                      </button>
-                    )}
-                  </td>
+          <>
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-3">Código</th>
+                  <th className="px-4 py-3">Nombre</th>
+                  <th className="px-4 py-3">Apellidos</th>
+                  <th className="px-4 py-3">Teléfono</th>
+                  <th className="px-4 py-3">Población</th>
+                  <th className="px-4 py-3">Provincia</th>
+                  <th className="px-4 py-3">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pacientesPagina.map((p) => (
+                  <tr key={p.codigo} className="border-t border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-700">#{p.codigo}</td>
+                    <td className="px-4 py-3">{p.nombre}</td>
+                    <td className="px-4 py-3">{p.apellidos}</td>
+                    <td className="px-4 py-3">{p.telefono || '—'}</td>
+                    <td className="px-4 py-3">{p.poblacion || '—'}</td>
+                    <td className="px-4 py-3">{p.provincia || '—'}</td>
+                    <td className="px-4 py-3 flex gap-2">
+                      <button onClick={() => abrirEditar(p)}
+                        className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
+                        Editar
+                      </button>
+                      {isAdmin() && (
+                        <button onClick={() => handleEliminar(p)}
+                          className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
+                          Eliminar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Paginación */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+              <span>
+                Mostrando {Math.min((pagina - 1) * POR_PAGINA + 1, pacientes.length)}–{Math.min(pagina * POR_PAGINA, pacientes.length)} de {pacientes.length} pacientes
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPagina(p => Math.max(p - 1, 1))}
+                  disabled={pagina === 1}
+                  className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                  ← Anterior
+                </button>
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                  <button key={n} onClick={() => setPagina(n)}
+                    className={`px-3 py-1 rounded border transition ${
+                      n === pagina
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}>
+                    {n}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPagina(p => Math.min(p + 1, totalPaginas))}
+                  disabled={pagina === totalPaginas}
+                  className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                  Siguiente →
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

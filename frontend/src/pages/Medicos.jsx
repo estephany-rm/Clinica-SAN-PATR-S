@@ -6,15 +6,15 @@ import { useAuth } from '../context/AuthContext';
 import { getMedicos, createMedico, updateMedico, deleteMedico } from '../services/medicoService';
 
 const FORM_INICIAL = { nombre: '', apellidos: '', telefono: '', especialidad: '' };
-
-// Todos los campos son obligatorios en médicos
 const CAMPOS_OBLIGATORIOS = ['nombre', 'apellidos', 'telefono', 'especialidad'];
+const POR_PAGINA = 5;
 
 export default function Medicos() {
   const { isAdmin, isModerador } = useAuth();
   const [medicos, setMedicos]           = useState([]);
   const [cargando, setCargando]         = useState(true);
   const [buscar, setBuscar]             = useState('');
+  const [pagina, setPagina]             = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando]         = useState(null);
   const [form, setForm]                 = useState(FORM_INICIAL);
@@ -25,7 +25,10 @@ export default function Medicos() {
     setCargando(true);
     try {
       const res = await getMedicos(termino);
-      if (res.data.success) setMedicos(res.data.data);
+      if (res.data.success) {
+        setMedicos(res.data.data);
+        setPagina(1);
+      }
     } catch {
       Swal.fire('Error', 'No se pudieron cargar los médicos', 'error');
     } finally {
@@ -34,6 +37,10 @@ export default function Medicos() {
   };
 
   useEffect(() => { cargar(); }, []);
+
+  // Paginación
+  const totalPaginas = Math.ceil(medicos.length / POR_PAGINA);
+  const medicosPagina = medicos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   const handleBuscar = (e) => { setBuscar(e.target.value); cargar(e.target.value); };
 
@@ -166,45 +173,78 @@ export default function Medicos() {
         ) : medicos.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No se encontraron médicos.</div>
         ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
-              <tr>
-                <th className="px-4 py-3">Código</th>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Apellidos</th>
-                <th className="px-4 py-3">Especialidad</th>
-                <th className="px-4 py-3">Teléfono</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicos.map((m) => (
-                <tr key={m.codigo} className="border-t border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-700">#{m.codigo}</td>
-                  <td className="px-4 py-3">{m.nombre}</td>
-                  <td className="px-4 py-3">{m.apellidos}</td>
-                  <td className="px-4 py-3">
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{m.especialidad}</span>
-                  </td>
-                  <td className="px-4 py-3">{m.telefono || '—'}</td>
-                  <td className="px-4 py-3 flex gap-2">
-                    {isModerador() && (
-                      <button onClick={() => abrirEditar(m)}
-                        className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
-                        Editar
-                      </button>
-                    )}
-                    {isAdmin() && (
-                      <button onClick={() => handleEliminar(m)}
-                        className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
-                        Eliminar
-                      </button>
-                    )}
-                  </td>
+          <>
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-3">Código</th>
+                  <th className="px-4 py-3">Nombre</th>
+                  <th className="px-4 py-3">Apellidos</th>
+                  <th className="px-4 py-3">Especialidad</th>
+                  <th className="px-4 py-3">Teléfono</th>
+                  <th className="px-4 py-3">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {medicosPagina.map((m) => (
+                  <tr key={m.codigo} className="border-t border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-700">#{m.codigo}</td>
+                    <td className="px-4 py-3">{m.nombre}</td>
+                    <td className="px-4 py-3">{m.apellidos}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{m.especialidad}</span>
+                    </td>
+                    <td className="px-4 py-3">{m.telefono || '—'}</td>
+                    <td className="px-4 py-3 flex gap-2">
+                      {isModerador() && (
+                        <button onClick={() => abrirEditar(m)}
+                          className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200 transition font-medium">
+                          Editar
+                        </button>
+                      )}
+                      {isAdmin() && (
+                        <button onClick={() => handleEliminar(m)}
+                          className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200 transition font-medium">
+                          Eliminar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Paginación */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+              <span>
+                Mostrando {Math.min((pagina - 1) * POR_PAGINA + 1, medicos.length)}–{Math.min(pagina * POR_PAGINA, medicos.length)} de {medicos.length} médicos
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPagina(p => Math.max(p - 1, 1))}
+                  disabled={pagina === 1}
+                  className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                  ← Anterior
+                </button>
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                  <button key={n} onClick={() => setPagina(n)}
+                    className={`px-3 py-1 rounded border transition ${
+                      n === pagina
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}>
+                    {n}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPagina(p => Math.min(p + 1, totalPaginas))}
+                  disabled={pagina === totalPaginas}
+                  className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                  Siguiente →
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

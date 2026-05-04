@@ -1,5 +1,3 @@
--- Datos de prueba
-
 USE clinica_san_patras_db;
 
 INSERT INTO medico (nombre, apellidos, telefono, especialidad) VALUES
@@ -15,8 +13,6 @@ INSERT INTO ingreso (num_habitacion, cama, fecha_ingreso, paciente_codigo, medic
   (101, 1, NOW(), 1, 1),
   (102, 2, NOW(), 2, 2);
 
--- Usuario admin inicial (contraseña: Admin1234)
--- Hash generado con bcrypt 10 rounds
 INSERT INTO usuarios (usuario, password, rol) VALUES
-  ('admin', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-  ('medico1', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario');
+  ('admin',   '$2b$10$6CzB.CP.kKLDwdHTCAQs3O8A18H9/GkZgxZP8s3wX.F9OGXjPjIiK', 'admin'),
+  ('medico1', '$2b$10$gMS0Gbs58t4dh/ToJCaBtOPTu1/Hy2ksF.LnwzFtb7FjkbemuBPEO', 'usuario');
