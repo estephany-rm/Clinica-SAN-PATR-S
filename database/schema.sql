@@ -9,11 +9,11 @@ CREATE TABLE paciente (
   codigo          INT AUTO_INCREMENT PRIMARY KEY,
   nombre          VARCHAR(60)  NOT NULL,
   apellidos       VARCHAR(80)  NOT NULL,
-  direccion       VARCHAR(120),
-  poblacion       VARCHAR(60),
-  provincia       VARCHAR(60),
-  codigo_postal   VARCHAR(10),
-  telefono        VARCHAR(15),
+  direccion       VARCHAR(120), NOT NULL,
+  poblacion       VARCHAR(60), NOT NULL,
+  provincia       VARCHAR(60), NOT NULL,
+  codigo_postal   VARCHAR(10), NOT NULL,
+  telefono        VARCHAR(15), NOT NULL,
   fecha_nacimiento DATE        NOT NULL
 );
 
@@ -21,7 +21,7 @@ CREATE TABLE medico (
   codigo       INT AUTO_INCREMENT PRIMARY KEY,
   nombre       VARCHAR(60) NOT NULL,
   apellidos    VARCHAR(80) NOT NULL,
-  telefono     VARCHAR(15),
+  telefono     VARCHAR(15) NOT NULL,
   especialidad VARCHAR(80) NOT NULL
 );
 

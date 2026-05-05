@@ -1,4 +1,3 @@
-
 // Layout principal con sidebar y navbar
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

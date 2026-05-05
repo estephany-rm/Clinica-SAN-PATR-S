@@ -58,6 +58,7 @@ export default function Dashboard() {
   ].filter(a => !a.roles || a.roles.includes(user?.rol));
 
   return (
+    
     <Layout>
       {/* Encabezado */}
       <div className="mb-8">

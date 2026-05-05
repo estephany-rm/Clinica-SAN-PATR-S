@@ -1,6 +1,5 @@
 // Conexión a MySQL
 
-// backend/config/db.js
 const mysql2 = require('mysql2/promise');
 require('dotenv').config();
 

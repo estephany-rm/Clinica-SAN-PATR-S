@@ -5,7 +5,7 @@ const ctrl        = require('../controllers/ingreso.controller');
 const verifyToken = require('../middleware/verifyToken');
 const checkRole   = require('../middleware/checkRole');
 
-router.get('/estadisticas', verifyToken, ctrl.estadisticas); // ← ANTES de /:id
+router.get('/estadisticas', verifyToken, ctrl.estadisticas);
 router.get('/',       verifyToken, ctrl.listar);
 router.get('/:id',   verifyToken, ctrl.obtener);
 router.post('/',     verifyToken, ctrl.crear);
